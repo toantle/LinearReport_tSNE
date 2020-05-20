@@ -28,3 +28,15 @@ def plot_embedding_MNIST(X, y, digits, title=None, axes=None):
     plt.xticks([]), plt.yticks([])
     if title is not None:
         ax.set_title(title)
+
+def plot_embedding_W2V(X, y, title=None, axes=None):
+    x_min, x_max = np.min(X, 0), np.max(X, 0)
+    X = (X - x_min) / (x_max - x_min)
+
+    ax = plt.subplot(111) if axes==None else axes
+    for i in range(X.shape[0]):
+        ax.text(X[i, 0], X[i, 1], str(y[i]), fontdict={'weight': 'bold', 'size': 9})
+
+    plt.xticks([]), plt.yticks([])
+    if title is not None:
+        ax.set_title(title)

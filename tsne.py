@@ -40,8 +40,6 @@ def _binary_search_perplexity(sqdistances, desired_perplexity):
         beta_min = -np.inf
         beta_max = np.inf
         beta = 1.0
-        if i % 200 == 0:
-            print('Calculate perplexity for point %s of %s' % (i, n_samples))
 
         # Binary search of precision for i-th conditional distribution
         for l in range(n_steps):
@@ -154,11 +152,10 @@ def _gradient_descent(objective, p0, it, n_iter,
         update = momentum * update - learning_rate * grad
         p += update
 
-        if i == 0 or (i + 1) % 100 == 0:
-            steps.append([i, p.copy().ravel()])
+        if i == 0 or (i + 1) % 50 == 0:
+            steps.append([i+1, p.copy().ravel()])
 
-        if check_convergence:     
-            print('Iteration %s of %s' % (i+1, n_iter))        
+        if check_convergence:            
             if error < best_error:
                 best_error = error
                 best_iter = i
@@ -192,6 +189,7 @@ def tsne(X=np.array([]), no_dims=2, perplexity=30.0, max_iter=1000, return_steps
     X_embedded = pca.fit_transform(X).astype(np.float32, copy=False)
     print('Preprocessed with PCA done')
     
+    print('Start Gradient descent with early exaggeration')
     degrees_of_freedom = max(no_dims - 1, 1)
 
     params = X_embedded.ravel()
@@ -210,6 +208,7 @@ def tsne(X=np.array([]), no_dims=2, perplexity=30.0, max_iter=1000, return_steps
     P *= _EARLY_EXAGGERATION
     params, kl_divergence, it, steps = _gradient_descent(obj_func, params, **opt_args)
 
+    print('Start Gradient descent with no early exaggeration')
     P /= _EARLY_EXAGGERATION
     remaining = max_iter - _EXPLORATION_N_ITER
     if it < _EXPLORATION_N_ITER or remaining > 0:
@@ -218,7 +217,7 @@ def tsne(X=np.array([]), no_dims=2, perplexity=30.0, max_iter=1000, return_steps
         opt_args['momentum'] = 0.8
         opt_args['n_iter_without_progress'] = 300
         params, kl_divergence, it, add_steps = _gradient_descent(obj_func, params, **opt_args)
-
+    
     X_embedded = params.reshape(n_samples, no_dims)
     steps = np.vstack((steps, add_steps))
     steps = [[step[0], step[1].reshape(n_samples, no_dims)] for step in steps]
